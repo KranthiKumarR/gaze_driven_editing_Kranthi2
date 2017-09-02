@@ -22,9 +22,9 @@ function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,orig
 
     
     [Y] = discretize(gaze_data,edges);
-    AllData(3918,:)
+   % AllData(3918,:)
     AllData = discretize(AllData,edges);
-    AllData(3918,:)
+    %AllData(3918,:)
     gaze_data = Y;
     
     n_frames = size(gaze_data,1);

@@ -7,7 +7,7 @@ load AllData
 
 outwidth_all = [400 350 350 570 496 572 350 0 350];
 
-idx_video = 2;
+idx_video = 9;
 fps = AllData{idx_video}.fps;
 Data = AllData{idx_video}.Data;
 resolution = AllData{idx_video}.resolution;
