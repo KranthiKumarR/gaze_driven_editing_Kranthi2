@@ -1,13 +1,17 @@
-function [final_cuts_dp, a, img] = cut_detect_DP(data,out_width,k,sigma,duration,cut_dist,Adata,flag)
+function [final_cuts_dp,a, img,c,cuts2] = cut_detect_DP(data,out_width,k,sigma,duration,cut_dist,Adata,flag)
 
 N = size(data,1);
 e = ones(N,1);
 
-[a,b,c,d,img]=DP_findcut2(data,1366,out_width,sigma,duration,Adata,flag);
+
+[a,b,c,d,img,cuts2]=DP_findcut2(data,1366,out_width,sigma,duration,Adata,flag);
+
 De1 = spdiags([e  -e], 0:1, N, N);
 temp = De1*a;    % to find the position of cuts
-[cuts_dp,~]= find(abs(temp)>0.75*out_width);
 
+
+[cuts_dp,~]= find(abs(temp)>0.75*out_width); % no need for this c has it 
+ 
 nonver_curve2 = a;
 
 % figure,plot(data);
