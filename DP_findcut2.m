@@ -5,10 +5,11 @@
 % duration = 30
 % sigma with value 30 then e(-1/2) occurs at 30 frame on either side
 
-function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,original_width,out_width,sigma,duration,AllData,flag)
+function [backtrack,scenes,cuts,gaze_data,weight_map,cuts2]=DP_findcut2(gaze_data,original_width,out_width,sigma,duration,AllData,flag)
     
     dis =1;
     edges = 1:dis:original_width; % downsample the data
+    
     [a,b]=find(AllData>original_width);
     
     for i=1:length(a)
@@ -27,6 +28,8 @@ function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,orig
     %AllData(3918,:)
     gaze_data = Y;
     
+    % gaze data is changed discrete data
+    
     n_frames = size(gaze_data,1);
     
     original_width = length(edges) %change original width
@@ -39,9 +42,13 @@ function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,orig
     
     scenes  = cell(original_width,1);
     scenes_temp  = cell(original_width,1);
+    
+    scenes2  = cell(original_width,1);
+    scenes_temp2  = cell(original_width,1);
+    
     for i =1:original_width
         scenes{i,1}=[1];
-        scenes_temp  = cell(original_width,1);
+        scenes2{i,1}=[1];
     end
 %     size(AllData)
     % max(AllData(:))
@@ -54,7 +61,8 @@ function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,orig
                 weight_map(x,:) = weight_map(x,:)-exp(-((frames-i).^2)/(2*sigma^2));
                 temp(x,i) = 1;
             end
-        end        
+        end
+        weight_map = weight_map/3;
     else
         for i=1:n_frames
             x = round(gaze_data(i)); % gaze at first frame.
@@ -96,26 +104,39 @@ function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,orig
 %                [gaze_data(j),gaze_data(k),i,duration,dis]
 %                temp(j,i),temp(k,i)
                 %end
-                [cost,flag] = cost_travel(j,k,out_width,scenes{k},i,duration,dis); %scenes
+                [cost,flag] = cost_travel(j,k,out_width,scenes{k},scenes2{k},i,duration,dis); %scenes
                 if(cost+DP_mat(k,i-1)+weight_map(j,i) < DP_mat(j,i))
+                    
                     DP_mat(j,i) = cost+weight_map(j,i)+DP_mat(k,i-1);
                     indi(j,i) = k;
+                    
                     if(flag==1)
                         scenes_temp{j} = [scenes{k},i];
                     else
                         scenes_temp{j} = scenes{k};
                     end
+                    x1 = round(j*dis+dis/2);
+                    x2 = round(k*dis+dis/2);
+                    
+                    if( (abs(x1-x2)> 1 && abs(x1-x2) < out_width*0.7) && flag~=1)                       
+                        scenes_temp2{j} = [scenes2{k},i];
+                    else
+                        scenes_temp2{j} = scenes2{k};
+                    end
+                    
                 else
                     DP_mat(j,i) = DP_mat(j,i);
                 end
             end
         end
         scenes = scenes_temp;
+        scenes2 = scenes_temp2;
     end
     
     [~,ind] = min(DP_mat(:,n_frames));
     backtrack(n_frames)=ind ;
     cuts = scenes{ind} ;
+    cuts2 = scenes2{ind};
     
     for i=1:n_frames-1
         ind = indi(ind,n_frames+1-i);
@@ -124,7 +145,7 @@ function [backtrack,scenes,cuts,gaze_data,weight_map]=DP_findcut2(gaze_data,orig
     toc
 end
 
-function [cost,flag] = cost_travel(x1,x2,out_width,scenes,i,duration,dis)
+function [cost,flag] = cost_travel(x1,x2,out_width,scenes,scenes2,i,duration,dis)
     flag=0;
      
     x1 = round(x1*dis+dis/2);
@@ -132,11 +153,12 @@ function [cost,flag] = cost_travel(x1,x2,out_width,scenes,i,duration,dis)
     
     % if the distance is more than w , then there is no transition cost but
     % there is a scene cost.
-    if(abs(x1-x2)>= out_width)
+    if(abs(x1-x2)>= out_width*0.7)
         flag=1;
-        cost = exp(-(i-scenes(end))/(duration/2)) ;  % cost e_{-time/(duration/2)} with value reaching e_{-1} at duration/2   
+        cost = 10*exp(-(i-scenes(end))/(duration/2)) ;  % cost e_{-time/(duration/2)} with value reaching e_{-1} at duration/2   
     else
-        cost = 2*(1 - exp(-abs(x1-x2)/(2*((out_width/8))))); % cost is 1-e_{-distance/(W/8)} with value reaching 0.9 at w/2
+        cost = 10*(1 - exp(-abs(x1-x2)/(2*((out_width/8))))); % cost is 1-e_{-distance/(W/8)} with value reaching 0.9 at w/2
+        cost = cost + exp(-(i-scenes2(end))/(duration/2));
     end
     
 end
