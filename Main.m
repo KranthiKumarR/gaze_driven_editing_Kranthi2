@@ -68,13 +68,18 @@ axis([0 l 0 1366])
 
 
 %% DP
-tic
-[cuts_dp dp_output img] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,1);
-[cuts_dp_2 dp_output_2 img_2] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,0);
-toc
-scatter(cuts_dp,data(cuts_dp),20,'ok');
-scatter(cuts_dp_2,data(cuts_dp_2),20,'or');
 
+tic
+
+[cuts_dp,dp_output,img,c1,cuts21] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,1);
+[cuts_dp_2,dp_output_2,img_2,c2,cuts22] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,0);
+
+toc
+scatter(cuts_dp,dp_output(cuts_dp),20,'ok');
+scatter(cuts21,dp_output(cuts21),20,'+r');
+
+scatter(cuts_dp_2,dp_output_2(cuts_dp_2),20,'or');
+scatter(cuts22,dp_output_2(cuts22),20,'+k');
 
 plot(dp_output,'-k');
 plot(dp_output_2,'-g');
