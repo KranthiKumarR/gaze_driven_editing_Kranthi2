@@ -70,26 +70,17 @@ axis([0 l 0 1366])
 %% DP
 
 tic
-
-[cuts_dp,dp_output,img,c1,cuts21] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,1);
-[cuts_dp_2,dp_output_2,img_2,c2,cuts22] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,0);
-
+[cuts_dp dp_output img] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,1);
+[cuts_dp_2 dp_output_2 img_2] = cut_detect_DP(data,out_width,k,30,100,cut_dist,AData,0);
 toc
+scatter(cuts_dp,data(cuts_dp),20,'ok');
+scatter(cuts_dp_2,data(cuts_dp_2),20,'or');
 
-
-
-scatter(cuts_dp,dp_output(cuts_dp),20,'ok');
-scatter(cuts21,dp_output(cuts21),20,'+r');
-scatter(c1,dp_output(c1),20,'*r');
-
-scatter(cuts_dp_2,dp_output_2(cuts_dp_2),20,'or');
-scatter(cuts22,dp_output_2(cuts22),20,'+k');
-scatter(c2,dp_output_2(c2),20,'*b');
 
 plot(dp_output,'-k');
 plot(dp_output_2,'-g');
 
-pause
+%pause
 % plot(temp(:,1),'-g')
 % plot(temp(:,2),'-m');
 % plot(temp(:,3),'-k');
@@ -107,9 +98,6 @@ bool = ones(N,4);
 
 % generate bool variables
 % for original cuts
-
-% [dp_output_smooth,L2_cuts]= smooth_DP(cuts21,c1,dp_output,out_width,bool) ; 
-
 
 bool(cuts_org(1):cuts_org(1)+s_skip,1) = 0;
 for i=2:length(cuts_org)
@@ -139,12 +127,9 @@ vc1 = 3;
 vc2 = 3;
 
 thresh = out_width*0.1;
-[opt_data,temp1, temp2]=path_optimization_cvx(data,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh);
+[opt_data,temp1, temp2,cuts21]=path_optimization_cvx(data,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh);
 
 [opt_data_dp,temp1_dp, temp2_dp]=path_optimization_cvx(dp_output,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,0);
-
-
-
 
 figure,
 %subplot(211)

@@ -55,7 +55,7 @@ function [backtrack,scenes,cuts,gaze_data,weight_map,cuts2]=DP_findcut2(gaze_dat
     % pause
     if flag
         for i=1:n_frames
-            for j=1:3 %this need to be "n" users 
+            for j=1:3 %this need to be "n:
                 x = round(AllData(i,j)); % gaze at first frame.
 %                  [i j x AllData(i,j)]
                 weight_map(x,:) = weight_map(x,:)-exp(-((frames-i).^2)/(2*sigma^2));
@@ -157,7 +157,7 @@ function [cost,flag] = cost_travel(x1,x2,out_width,scenes,scenes2,i,duration,dis
         flag=1;
         cost = 10*exp(-(i-scenes(end))/(duration/2)) ;  % cost e_{-time/(duration/2)} with value reaching e_{-1} at duration/2   
     else
-        cost = 20*(1 - exp(-abs(x1-x2)/(2*((out_width/8))))); % cost is 1-e_{-distance/(W/8)} with value reaching 0.9 at w/2
+        cost = 10*(1 - exp(-abs(x1-x2)/(2*((out_width/8))))); % cost is 1-e_{-distance/(W/8)} with value reaching 0.9 at w/2
         cost = cost + 2*exp(-(i-scenes2(end))/(duration/2));
     end
     
