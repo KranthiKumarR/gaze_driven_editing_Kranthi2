@@ -38,7 +38,9 @@ data = data';
 
 
 out_width = AllData{idx_video}.resolution(2);
-out_width = outwidth_all(idx_video)*AR;
+out_width = round(outwidth_all(idx_video)*AR);
+length1 = outwidth_all(idx_video);
+
 
 size_data = size(data,1);
 bool = ones(size_data,4); % all have equal weights
@@ -89,7 +91,7 @@ scatter(c2,dp_output_2(c2),20,'*b');
 plot(dp_output,'-k');
 plot(dp_output_2,'-g');
 
-pause
+% pause
 % plot(temp(:,1),'-g')
 % plot(temp(:,2),'-m');
 % plot(temp(:,3),'-k');
@@ -97,12 +99,22 @@ pause
 img2 = img(size(img,1):-1:1,:);
 figure,imshow(img2,[])
 
+%% Zoom detection 
+
+per_frameVar = var(AData');
+
+mini = min(per_frameVar);
+per_frameVar = per_frameVar-mini;
+maxi = max(per_frameVar);
+
+per_frameVar = 1 - ((1-(per_frameVar/maxi))*0.3)' ;
+
 %% Path Optimization
 
 % load original cuts
 A = importdata(['./original_cut_detection/' AllData{idx_video}.filename(1:end-4) '_shots.txt'], ' ');
 cuts_org = A(:,1);
-cuts = cuts_dp;
+cuts = c1;
 bool = ones(N,4);
 
 % generate bool variables
@@ -118,8 +130,9 @@ for i=2:length(cuts_org)
         bool(cuts_org(i)-1:cuts_org(i),3) = 0;
         bool(cuts_org(i)-2:cuts_org(i),4) = 0;
 end
+
 % for detected cuts
-for i=1:length(cuts)
+for i=2:length(cuts)
         bool(cuts(i):cuts(i)+s_skip,1) = 0;
         bool(cuts(i):cuts(i),2) = 0;
         bool(cuts(i)-1:cuts(i),3) = 0;
@@ -138,10 +151,10 @@ lambda3 = 30;
 vc1 = 3;
 vc2 = 3;
 
-thresh = out_width*0.1;
-[opt_data,temp1, temp2]=path_optimization_cvx(data,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh);
+thresh = out_width*0.2;
 
-[opt_data_dp,temp1_dp, temp2_dp]=path_optimization_cvx(dp_output,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,0);
+[opt_data,temp1, temp2,zoom]=path_optimization_cvx(data,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh,per_frameVar);
+[opt_data_dp,temp1_dp, temp2_dp,zoom_dp]=path_optimization_cvx(dp_output,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh,per_frameVar);
 
 
 
@@ -168,7 +181,38 @@ legend('Gaze Data', 'Track')
 % 
 % axis([0 l 0 6])
 
+out_width
+length1
 
-fileID = fopen([AllData{idx_video}.filename(1:end-4) '_optpath.txt'],'w');
-fprintf(fileID,'%f \n',opt_data');
-fclose(fileID);
+one= [];
+si = size(opt_data_dp,1);
+for i =1:si
+   
+   out_width = round( (length1*zoom_dp(i)*AR) - mod(round((length1*zoom_dp(i)*AR)),2)) ;
+   h  =  round(length1*zoom_dp(i)) - mod(round((length1*zoom_dp(i))),2)  ;
+   
+   t_y = round(opt_data_dp(i,1)-out_width/2) ;   
+   if(t_y <= 0)
+    t_y = 1;
+   end
+   if(t_y+out_width>=1366)
+   t_y=1366-out_width;
+   end
+   
+   top = round( length1/2 - h/2 );
+   
+   
+   one = vertcat(one,[t_y,top,out_width,h]);
+   
+end
+close all
+dlmwrite([AllData{idx_video}.filename(1:end-4),'_optzoom.txt'],one);
+
+
+% fileID = fopen([AllData{idx_video}.filename(1:end-4) '_optpath.txt'],'w');
+% fprintf(fileID,'%f \n',opt_data');
+% fclose(fileID);
+% 
+% fileID = fopen([AllData{idx_video}.filename(1:end-4) '_optpath_dp.txt'],'w');
+% fprintf(fileID,'%f \n',opt_data_dp');
+% fclose(fileID);

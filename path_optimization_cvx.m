@@ -1,4 +1,4 @@
-function [opt_data, vc1_opt, vc2_opt] = path_optimization_cvx(array,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh)
+function [opt_data, vc1_opt, vc2_opt,zoom] = path_optimization_cvx(array,bool,lambda0,lambda1,lambda2,lambda3,vc1,vc2,thresh,per_frameVar)
 
 N = size(array,1);
 e = ones(N,1);
@@ -26,12 +26,15 @@ D3(in,:)=0;
 % cvx_end
 
 cvx_begin
-variable g(N,1)
+variable g(N,1);
 variable temp(N,1);
+variable z(N,1);
 
 minimise(lambda0*sum((bool(1:N,1).*(relu_cvx(g(1:N)-array(1:N),thresh,2))))...
     + lambda1*norm( (D1*g),1)+ lambda2*norm((D2*g),1) + lambda3*norm((D3*g),1)...
-    )
+    + norm(bool(1:N,1).*(z(1:N)-per_frameVar(1:N)),1)+ lambda1*norm((D1*z),1)+ lambda2*norm((D2*z),1) + lambda3*norm((D3*z),1)...
+     )
+         
 subject to
 abs(D1*g) <= vc1;
 abs(D2*g) <= vc2;
@@ -48,6 +51,7 @@ abs(D2*g) <= vc2;
 
 cvx_end
 
+zoom = z;
 opt_data=g;
 vc1_opt = abs(D1*g);
 vc2_opt = abs(D2*g);

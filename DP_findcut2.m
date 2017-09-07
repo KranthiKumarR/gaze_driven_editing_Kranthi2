@@ -153,7 +153,7 @@ function [cost,flag] = cost_travel(x1,x2,out_width,scenes,scenes2,i,duration,dis
     
     % if the distance is more than w , then there is no transition cost but
     % there is a scene cost.
-    if(abs(x1-x2)>= out_width*0.7)
+    if(abs(x1-x2)>= out_width*0.8)
         flag=1;
         cost = 10*exp(-(i-scenes(end))/(duration/2)) ;  % cost e_{-time/(duration/2)} with value reaching e_{-1} at duration/2   
     else
